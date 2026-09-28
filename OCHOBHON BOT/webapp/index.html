@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Магазин</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #000000);
+    padding: 16px;
+    min-height: 100vh;
+  }
+  h1 { font-size: 20px; margin-bottom: 16px; }
+  .service {
+    background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .service h2 { font-size: 16px; margin-bottom: 6px; }
+  .service p { font-size: 14px; opacity: 0.8; margin-bottom: 10px; }
+  .price { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  button:active { opacity: 0.7; }
+  .stars { background: #f7b500; color: #000; }
+  .fiat { background: #2481cc; }
+  .loading { text-align: center; padding: 40px; opacity: 0.6; }
+</style>
+</head>
+<body>
+<h1>Магазин услуг</h1>
+<div id="app"><div class="loading">Загрузка...</div></div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+// Услуги (можно тянуть с бэкенда, но для простоты — локально)
+// ВАЖНО: цены должны совпадать с теми, что в боте
+const services = [
+  { id: 1, title: "Telegram-бот", desc: "Приём заказов, запись, квизы, рассылки", stars: 1500, rub: 15000 },
+  { id: 2, title: "Автоматизация", desc: "Отчёты, интеграции, скрипты", stars: 1000, rub: 10000 },
+  { id: 3, title: "Парсер", desc: "Сбор данных, мониторинг цен", stars: 1000, rub: 10000 },
+];
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  services.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'service';
+    div.innerHTML = `
+      <h2>${s.title}</h2>
+      <p>${s.desc}</p>
+      <div class="price">⭐ ${s.stars} звёзд · 💳 ${s.rub} ₽</div>
+    `;
+
+    const btnStars = document.createElement('button');
+    btnStars.className = 'stars';
+    btnStars.textContent = `Оплатить ${s.stars} ⭐`;
+    btnStars.onclick = () => payStars(s);
+    div.appendChild(btnStars);
+
+    const btnFiat = document.createElement('button');
+    btnFiat.className = 'fiat';
+    btnFiat.textContent = `Оплатить ${s.rub} ₽`;
+    btnFiat.onclick = () => payFiat(s);
+    div.appendChild(btnFiat);
+
+    app.appendChild(div);
+  });
+}
+
+function payStars(s) {
+  // Отправляем боту сигнал — он создаст инвойс звёздами
+  tg.sendData(JSON.stringify({ action: 'pay_stars', service_id: s.id }));
+  tg.close();
+}
+
+function payFiat(s) {
+  tg.sendData(JSON.stringify({ action: 'pay_fiat', service_id: s.id }));
+  tg.close();
+}
+
+render();
+</script>
+</body>
+</html>
